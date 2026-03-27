@@ -2,13 +2,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
-from requests_aws4auth import AWS4Auth
 
 app = Flask(__name__)
 CORS(app)
 
 # =========================
-# CONFIG (ADD YOUR KEYS)
+# CONFIG
 # =========================
 ACCESS_KEY = os.environ.get("ACCESS_KEY")
 SECRET_KEY = os.environ.get("SECRET_KEY")
@@ -21,15 +20,21 @@ PAAPI_ENDPOINT = "https://webservices.amazon.com/paapi5/searchitems"
 
 
 # =========================
-# AMAZON API CALL (ONE PAGE)
+# VALIDATE ENV VARIABLES
+# =========================
+def validate_env():
+    if not ACCESS_KEY or not SECRET_KEY or not PARTNER_TAG:
+        print("❌ Missing environment variables")
+        return False
+    return True
+
+
+# =========================
+# AMAZON API CALL (WITH DEBUG)
 # =========================
 def fetch_sofa_products_page(page):
-    auth = AWS4Auth(
-        ACCESS_KEY,
-        SECRET_KEY,
-        REGION,
-        SERVICE
-    )
+    if not validate_env():
+        return []
 
     headers = {
         "Content-Type": "application/json; charset=utf-8",
@@ -51,47 +56,55 @@ def fetch_sofa_products_page(page):
         ]
     }
 
-    response = requests.post(
-        PAAPI_ENDPOINT,
-        auth=auth,
-        json=payload,
-        headers=headers
-    )
+    try:
+        response = requests.post(
+            PAAPI_ENDPOINT,
+            json=payload,
+            headers=headers
+        )
 
-    if response.status_code != 200:
+        print("Amazon Status:", response.status_code)
+        print("Amazon Response:", response.text)
+
+        if response.status_code != 200:
+            return []
+
+        data = response.json()
+
+        items = data.get("SearchResult", {}).get("Items", [])
+
+        results = []
+
+        for item in items:
+            try:
+                title = item.get("ItemInfo", {}).get("Title", {}).get("DisplayValue", "")
+                image = item.get("Images", {}).get("Primary", {}).get("Medium", {}).get("URL", "")
+
+                price_info = item.get("Offers", {}).get("Listings", [])
+                price = None
+
+                if price_info:
+                    price = price_info[0].get("Price", {}).get("Amount", None)
+
+                url = item.get("DetailPageURL", "")
+
+                if title and price:
+                    results.append({
+                        "name": title,
+                        "price": price,
+                        "image": image,
+                        "link": url
+                    })
+
+            except Exception as e:
+                print("Item parse error:", e)
+                continue
+
+        return results
+
+    except Exception as e:
+        print("Request error:", e)
         return []
-
-    data = response.json()
-
-    items = data.get("SearchResult", {}).get("Items", [])
-
-    results = []
-
-    for item in items:
-        try:
-            title = item.get("ItemInfo", {}).get("Title", {}).get("DisplayValue", "")
-
-            image = item.get("Images", {}).get("Primary", {}).get("Medium", {}).get("URL", "")
-
-            price_info = item.get("Offers", {}).get("Listings", [])
-            price = None
-
-            if price_info:
-                price = price_info[0].get("Price", {}).get("Amount", None)
-
-            url = item.get("DetailPageURL", "")
-
-            results.append({
-                "name": title,
-                "price": price,
-                "image": image,
-                "link": url
-            })
-
-        except Exception:
-            continue
-
-    return results
 
 
 # =========================
@@ -111,16 +124,34 @@ def fetch_multiple_pages(max_pages=3):
 # BUDGET FILTERING
 # =========================
 def filter_by_budget(products, budget):
-    filtered = []
+    if not budget:
+        return products[:3]
 
-    for product in products:
-        if product["price"] and product["price"] <= budget:
-            filtered.append(product)
+    filtered = [p for p in products if p.get("price") and p["price"] <= budget]
 
-    # Optional: sort by price ascending (best fit)
     filtered.sort(key=lambda x: x["price"])
 
     return filtered[:3]
+
+
+# =========================
+# MOCK FALLBACK (IMPORTANT)
+# =========================
+def mock_products():
+    return [
+        {
+            "name": "Demo Sofa",
+            "price": 499,
+            "image": "https://via.placeholder.com/150",
+            "link": "https://www.amazon.com"
+        },
+        {
+            "name": "Modern Sofa",
+            "price": 799,
+            "image": "https://via.placeholder.com/150",
+            "link": "https://www.amazon.com"
+        }
+    ]
 
 
 # =========================
@@ -128,7 +159,7 @@ def filter_by_budget(products, budget):
 # =========================
 @app.route("/api/get_items", methods=["POST"])
 def get_items():
-    data = request.json
+    data = request.json or {}
 
     budget = data.get("budget")
     room = data.get("room")
@@ -136,15 +167,28 @@ def get_items():
     if room != "living_room":
         return jsonify({"error": "Only living room supported"}), 400
 
-    # Step 1: Fetch multiple pages
+    # Fetch products
     products = fetch_multiple_pages(max_pages=3)
 
-    # Step 2: Filter by budget
+    # If Amazon fails → fallback to mock
+    if not products:
+        print("⚠️ Falling back to mock data")
+        products = mock_products()
+
+    # Filter
     filtered_products = filter_by_budget(products, budget)
 
     return jsonify({
         "sofa": filtered_products
     })
+
+
+# =========================
+# HOME ROUTE (FIX 404)
+# =========================
+@app.route("/")
+def home():
+    return "SmartFurnish backend is running 🚀"
 
 
 # =========================
