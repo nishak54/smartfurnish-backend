@@ -1,0 +1,5 @@
+Flask
+flask-cors
+requests
+requests-aws4auth
+gunicorn
