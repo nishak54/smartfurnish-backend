@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import os
 from requests_aws4auth import AWS4Auth
 
 app = Flask(__name__)
