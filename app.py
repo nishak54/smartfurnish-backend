@@ -2,6 +2,10 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 import os
+import json
+import hashlib
+import hmac
+import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -15,31 +19,36 @@ PARTNER_TAG = os.environ.get("PARTNER_TAG")
 
 REGION = "us-east-1"
 SERVICE = "ProductAdvertisingAPI"
-
-PAAPI_ENDPOINT = "https://webservices.amazon.com/paapi5/searchitems"
-
-
-# =========================
-# VALIDATE ENV VARIABLES
-# =========================
-def validate_env():
-    if not ACCESS_KEY or not SECRET_KEY or not PARTNER_TAG:
-        print("❌ Missing environment variables")
-        return False
-    return True
+ENDPOINT = "https://webservices.amazon.com/paapi5/searchitems"
+HOST = "webservices.amazon.com"
 
 
 # =========================
-# AMAZON API CALL (WITH DEBUG)
+# SIGV4 HELPERS
+# =========================
+def sign(key, msg):
+    return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
+
+
+def get_signature_key(key, date_stamp, region_name, service_name):
+    k_date = sign(("AWS4" + key).encode("utf-8"), date_stamp)
+    k_region = hmac.new(k_date, region_name.encode("utf-8"), hashlib.sha256).digest()
+    k_service = hmac.new(k_region, service_name.encode("utf-8"), hashlib.sha256).digest()
+    k_signing = hmac.new(k_service, b"aws4_request", hashlib.sha256).digest()
+    return k_signing
+
+
+# =========================
+# AMAZON API CALL (SIGNED)
 # =========================
 def fetch_sofa_products_page(page):
-    if not validate_env():
-        return []
+    method = "POST"
+    canonical_uri = "/paapi5/searchitems"
+    canonical_querystring = ""
 
-    headers = {
-        "Content-Type": "application/json; charset=utf-8",
-        "X-Amz-Target": "com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems"
-    }
+    t = datetime.datetime.utcnow()
+    amz_date = t.strftime("%Y%m%dT%H%M%SZ")
+    date_stamp = t.strftime("%Y%m%d")
 
     payload = {
         "Keywords": "sofa",
@@ -56,102 +65,122 @@ def fetch_sofa_products_page(page):
         ]
     }
 
-    try:
-        response = requests.post(
-            PAAPI_ENDPOINT,
-            json=payload,
-            headers=headers
-        )
+    payload_json = json.dumps(payload)
 
-        print("Amazon Status:", response.status_code)
-        print("Amazon Response:", response.text)
+    # Canonical headers
+    canonical_headers = (
+        f"content-encoding:amz-1.0\n"
+        f"host:{HOST}\n"
+        f"x-amz-date:{amz_date}\n"
+        f"x-amz-target:com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems\n"
+    )
 
-        if response.status_code != 200:
-            return []
+    signed_headers = "content-encoding;host;x-amz-date;x-amz-target"
 
-        data = response.json()
+    payload_hash = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
 
-        items = data.get("SearchResult", {}).get("Items", [])
+    canonical_request = "\n".join([
+        method,
+        canonical_uri,
+        canonical_querystring,
+        canonical_headers,
+        signed_headers,
+        payload_hash
+    ])
 
-        results = []
+    algorithm = "AWS4-HMAC-SHA256"
+    credential_scope = f"{date_stamp}/{REGION}/{SERVICE}/aws4_request"
 
-        for item in items:
-            try:
-                title = item.get("ItemInfo", {}).get("Title", {}).get("DisplayValue", "")
-                image = item.get("Images", {}).get("Primary", {}).get("Medium", {}).get("URL", "")
+    string_to_sign = "\n".join([
+        algorithm,
+        amz_date,
+        credential_scope,
+        hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()
+    ])
 
-                price_info = item.get("Offers", {}).get("Listings", [])
-                price = None
+    signing_key = get_signature_key(SECRET_KEY, date_stamp, REGION, SERVICE)
 
-                if price_info:
-                    price = price_info[0].get("Price", {}).get("Amount", None)
+    signature = hmac.new(
+        signing_key,
+        string_to_sign.encode("utf-8"),
+        hashlib.sha256
+    ).hexdigest()
 
-                url = item.get("DetailPageURL", "")
+    authorization_header = (
+        f"{algorithm} "
+        f"Credential={ACCESS_KEY}/{credential_scope}, "
+        f"SignedHeaders={signed_headers}, "
+        f"Signature={signature}"
+    )
 
-                if title and price:
-                    results.append({
-                        "name": title,
-                        "price": price,
-                        "image": image,
-                        "link": url
-                    })
+    headers = {
+        "Content-Encoding": "amz-1.0",
+        "Content-Type": "application/json; charset=utf-8",
+        "X-Amz-Date": amz_date,
+        "X-Amz-Target": "com.amazon.paapi5.v1.ProductAdvertisingAPIv1.SearchItems",
+        "Authorization": authorization_header
+    }
 
-            except Exception as e:
-                print("Item parse error:", e)
-                continue
+    response = requests.post(ENDPOINT, data=payload_json, headers=headers)
 
-        return results
+    print("STATUS:", response.status_code)
+    print("RESPONSE:", response.text)
 
-    except Exception as e:
-        print("Request error:", e)
+    if response.status_code != 200:
         return []
+
+    data = response.json()
+
+    items = data.get("SearchResult", {}).get("Items", [])
+
+    results = []
+
+    for item in items:
+        try:
+            title = item.get("ItemInfo", {}).get("Title", {}).get("DisplayValue", "")
+            image = item.get("Images", {}).get("Primary", {}).get("Medium", {}).get("URL", "")
+
+            price = None
+            listings = item.get("Offers", {}).get("Listings", [])
+            if listings:
+                price = listings[0].get("Price", {}).get("Amount", None)
+
+            url = item.get("DetailPageURL", "")
+
+            if title and price:
+                results.append({
+                    "name": title,
+                    "price": price,
+                    "image": image,
+                    "link": url
+                })
+
+        except Exception as e:
+            print("Parse error:", e)
+
+    return results
 
 
 # =========================
-# FETCH MULTIPLE PAGES
+# MULTI PAGE FETCH
 # =========================
 def fetch_multiple_pages(max_pages=3):
     all_products = []
 
     for page in range(1, max_pages + 1):
-        page_results = fetch_sofa_products_page(page)
-        all_products.extend(page_results)
+        products = fetch_sofa_products_page(page)
+        all_products.extend(products)
 
     return all_products
 
 
 # =========================
-# BUDGET FILTERING
+# BUDGET FILTER
 # =========================
 def filter_by_budget(products, budget):
-    if not budget:
-        return products[:3]
-
-    filtered = [p for p in products if p.get("price") and p["price"] <= budget]
-
+    filtered = [p for p in products if p["price"] and p["price"] <= budget]
     filtered.sort(key=lambda x: x["price"])
-
     return filtered[:3]
-
-
-# =========================
-# MOCK FALLBACK (IMPORTANT)
-# =========================
-def mock_products():
-    return [
-        {
-            "name": "Demo Sofa",
-            "price": 499,
-            "image": "https://via.placeholder.com/150",
-            "link": "https://www.amazon.com"
-        },
-        {
-            "name": "Modern Sofa",
-            "price": 799,
-            "image": "https://via.placeholder.com/150",
-            "link": "https://www.amazon.com"
-        }
-    ]
 
 
 # =========================
@@ -159,7 +188,7 @@ def mock_products():
 # =========================
 @app.route("/api/get_items", methods=["POST"])
 def get_items():
-    data = request.json or {}
+    data = request.json
 
     budget = data.get("budget")
     room = data.get("room")
@@ -167,28 +196,12 @@ def get_items():
     if room != "living_room":
         return jsonify({"error": "Only living room supported"}), 400
 
-    # Fetch products
     products = fetch_multiple_pages(max_pages=3)
-
-    # If Amazon fails → fallback to mock
-    if not products:
-        print("⚠️ Falling back to mock data")
-        products = mock_products()
-
-    # Filter
-    filtered_products = filter_by_budget(products, budget)
+    filtered = filter_by_budget(products, budget)
 
     return jsonify({
-        "sofa": filtered_products
+        "sofa": filtered
     })
-
-
-# =========================
-# HOME ROUTE (FIX 404)
-# =========================
-@app.route("/")
-def home():
-    return "SmartFurnish backend is running 🚀"
 
 
 # =========================
