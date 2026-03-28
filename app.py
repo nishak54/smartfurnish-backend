@@ -7,12 +7,6 @@ import copy
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-ROOM_SCENES = {
-    "front": "/assets/rooms/livingroom-front.jpg",
-    "left": "/assets/rooms/livingroom-left.jpg",
-    "right": "/assets/rooms/livingroom-right.jpg",
-}
-
 SOFAS = [
     {
         "id": "sofa_1",
@@ -28,14 +22,14 @@ SOFAS = [
         "brand": "SmartLiving",
         "color": "Gray",
         "images": {
-            "front": "/assets/items/sofas/sofa-gray-front.png",
-            "left": "/assets/items/sofas/sofa-gray-left.png",
-            "right": "/assets/items/sofas/sofa-gray-right.png",
+            "front": "/assets/items/sofa/sofa1.webp",
+            "left": "/assets/items/sofa/sofa1.webp",
+            "right": "/assets/items/sofa/sofa1.webp",
         },
         "positions": {
-            "front": {"x": 80, "y": 260, "width": 300, "height": 140},
-            "left": {"x": 120, "y": 250, "width": 250, "height": 150},
-            "right": {"x": 420, "y": 250, "width": 250, "height": 150},
+            "front": {"x": 110, "y": 275, "width": 300, "height": 150},
+            "left": {"x": 130, "y": 270, "width": 260, "height": 150},
+            "right": {"x": 500, "y": 270, "width": 260, "height": 150},
         },
     },
     {
@@ -52,14 +46,38 @@ SOFAS = [
         "brand": "CasaForm",
         "color": "Beige",
         "images": {
-            "front": "/assets/items/sofas/sofa-beige-front.png",
-            "left": "/assets/items/sofas/sofa-beige-left.png",
-            "right": "/assets/items/sofas/sofa-beige-right.png",
+            "front": "/assets/items/sofa/sofa2.jpg",
+            "left": "/assets/items/sofa/sofa2.jpg",
+            "right": "/assets/items/sofa/sofa2.jpg",
         },
         "positions": {
-            "front": {"x": 65, "y": 250, "width": 330, "height": 155},
-            "left": {"x": 110, "y": 240, "width": 275, "height": 160},
-            "right": {"x": 405, "y": 240, "width": 275, "height": 160},
+            "front": {"x": 95, "y": 265, "width": 330, "height": 165},
+            "left": {"x": 115, "y": 258, "width": 285, "height": 165},
+            "right": {"x": 475, "y": 258, "width": 285, "height": 165},
+        },
+    },
+    {
+        "id": "sofa_3",
+        "type": "sofa",
+        "name": "Compact Sofa",
+        "price": 640,
+        "dimensions": "76 W x 33 D x 32 H in",
+        "rating": 4.3,
+        "reviews": 615,
+        "purchases": 1700,
+        "in_stock": False,
+        "material": "Rubberwood legs, woven fabric",
+        "brand": "UrbanNest",
+        "color": "Blue",
+        "images": {
+            "front": "/assets/items/sofa/sofa3.webp",
+            "left": "/assets/items/sofa/sofa3.webp",
+            "right": "/assets/items/sofa/sofa3.webp",
+        },
+        "positions": {
+            "front": {"x": 125, "y": 285, "width": 260, "height": 135},
+            "left": {"x": 145, "y": 280, "width": 235, "height": 135},
+            "right": {"x": 520, "y": 280, "width": 235, "height": 135},
         },
     },
 ]
@@ -79,14 +97,14 @@ CENTER_TABLES = [
         "brand": "OakLine",
         "color": "Walnut",
         "images": {
-            "front": "/assets/items/tables/table-wood-front.png",
-            "left": "/assets/items/tables/table-wood-left.png",
-            "right": "/assets/items/tables/table-wood-right.png",
+            "front": "/assets/items/tables/table1.webp",
+            "left": "/assets/items/tables/table1.webp",
+            "right": "/assets/items/tables/table1.webp",
         },
         "positions": {
-            "front": {"x": 430, "y": 300, "width": 150, "height": 90},
-            "left": {"x": 410, "y": 300, "width": 140, "height": 85},
-            "right": {"x": 350, "y": 300, "width": 140, "height": 85},
+            "front": {"x": 425, "y": 315, "width": 150, "height": 95},
+            "left": {"x": 425, "y": 320, "width": 140, "height": 90},
+            "right": {"x": 355, "y": 320, "width": 140, "height": 90},
         },
     },
     {
@@ -103,14 +121,38 @@ CENTER_TABLES = [
         "brand": "ClearHome",
         "color": "Clear",
         "images": {
-            "front": "/assets/items/tables/table-glass-front.png",
-            "left": "/assets/items/tables/table-glass-left.png",
-            "right": "/assets/items/tables/table-glass-right.png",
+            "front": "/assets/items/tables/table2.jpg",
+            "left": "/assets/items/tables/table2.jpg",
+            "right": "/assets/items/tables/table2.jpg",
         },
         "positions": {
-            "front": {"x": 425, "y": 302, "width": 150, "height": 88},
-            "left": {"x": 405, "y": 302, "width": 135, "height": 84},
-            "right": {"x": 355, "y": 302, "width": 135, "height": 84},
+            "front": {"x": 430, "y": 318, "width": 145, "height": 90},
+            "left": {"x": 430, "y": 320, "width": 135, "height": 86},
+            "right": {"x": 360, "y": 320, "width": 135, "height": 86},
+        },
+    },
+    {
+        "id": "table_3",
+        "type": "center_table",
+        "name": "Marble Top Center Table",
+        "price": 410,
+        "dimensions": "44 W x 24 D x 17 H in",
+        "rating": 4.7,
+        "reviews": 311,
+        "purchases": 980,
+        "in_stock": True,
+        "material": "Engineered marble top, metal base",
+        "brand": "LuxeNest",
+        "color": "White",
+        "images": {
+            "front": "/assets/items/tables/table3.webp",
+            "left": "/assets/items/tables/table3.webp",
+            "right": "/assets/items/tables/table3.webp",
+        },
+        "positions": {
+            "front": {"x": 420, "y": 312, "width": 160, "height": 96},
+            "left": {"x": 420, "y": 318, "width": 145, "height": 90},
+            "right": {"x": 350, "y": 318, "width": 145, "height": 90},
         },
     },
 ]
@@ -130,14 +172,14 @@ TV_STANDS = [
         "brand": "ViewCraft",
         "color": "Oak",
         "images": {
-            "front": "/assets/items/tvstands/tvstand-oak-front.png",
-            "left": "/assets/items/tvstands/tvstand-oak-left.png",
-            "right": "/assets/items/tvstands/tvstand-oak-right.png",
+            "front": "/assets/items/tvstands/tvstand1.webp",
+            "left": "/assets/items/tvstands/tvstand1.webp",
+            "right": "/assets/items/tvstands/tvstand1.webp",
         },
         "positions": {
-            "front": {"x": 610, "y": 145, "width": 220, "height": 120},
-            "left": {"x": 650, "y": 150, "width": 180, "height": 105},
-            "right": {"x": 90, "y": 150, "width": 180, "height": 105},
+            "front": {"x": 640, "y": 170, "width": 210, "height": 110},
+            "left": {"x": 700, "y": 182, "width": 150, "height": 92},
+            "right": {"x": 70, "y": 182, "width": 150, "height": 92},
         },
     },
     {
@@ -154,14 +196,38 @@ TV_STANDS = [
         "brand": "SkyWall",
         "color": "Black",
         "images": {
-            "front": "/assets/items/tvstands/tvstand-black-front.png",
-            "left": "/assets/items/tvstands/tvstand-black-left.png",
-            "right": "/assets/items/tvstands/tvstand-black-right.png",
+            "front": "/assets/items/tvstands/tvstand2.jpg",
+            "left": "/assets/items/tvstands/tvstand2.jpg",
+            "right": "/assets/items/tvstands/tvstand2.jpg",
         },
         "positions": {
-            "front": {"x": 615, "y": 150, "width": 220, "height": 105},
-            "left": {"x": 655, "y": 155, "width": 175, "height": 96},
-            "right": {"x": 95, "y": 155, "width": 175, "height": 96},
+            "front": {"x": 645, "y": 172, "width": 205, "height": 100},
+            "left": {"x": 705, "y": 185, "width": 145, "height": 88},
+            "right": {"x": 75, "y": 185, "width": 145, "height": 88},
+        },
+    },
+    {
+        "id": "tv_3",
+        "type": "tv_stand",
+        "name": "Classic TV Cabinet",
+        "price": 480,
+        "dimensions": "64 W x 18 D x 24 H in",
+        "rating": 4.6,
+        "reviews": 458,
+        "purchases": 1210,
+        "in_stock": False,
+        "material": "Solid wood frame, veneer finish",
+        "brand": "HeritageHome",
+        "color": "Espresso",
+        "images": {
+            "front": "/assets/items/tvstands/tvstand3.jpg",
+            "left": "/assets/items/tvstands/tvstand3.jpg",
+            "right": "/assets/items/tvstands/tvstand3.jpg",
+        },
+        "positions": {
+            "front": {"x": 635, "y": 168, "width": 215, "height": 112},
+            "left": {"x": 700, "y": 180, "width": 150, "height": 94},
+            "right": {"x": 70, "y": 180, "width": 150, "height": 94},
         },
     },
 ]
@@ -175,7 +241,7 @@ CATALOG = {
 ROOM = {
     "width": 920,
     "height": 520,
-    "angles": ROOM_SCENES,
+    "angles": ["front", "left", "right"]
 }
 
 def pick_one(item_type, exclude_id=None):
