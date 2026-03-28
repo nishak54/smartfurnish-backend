@@ -1,0 +1,85 @@
+[
+  {
+    "id": 1,
+    "name": "Modern Grey Sofa",
+    "category": "sofa",
+    "room": "living_room",
+    "price": 799,
+    "image": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN1?tag=yourtag-20"
+  },
+  {
+    "id": 2,
+    "name": "L-Shaped Sectional Sofa",
+    "category": "sofa",
+    "room": "living_room",
+    "price": 999,
+    "image": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN2?tag=yourtag-20"
+  },
+  {
+    "id": 3,
+    "name": "Compact Fabric Sofa",
+    "category": "sofa",
+    "room": "living_room",
+    "price": 599,
+    "image": "https://images.unsplash.com/photo-1493666438817-866a91353ca9?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN3?tag=yourtag-20"
+  },
+
+  {
+    "id": 4,
+    "name": "Wooden Coffee Table",
+    "category": "coffee_table",
+    "room": "living_room",
+    "price": 199,
+    "image": "https://images.unsplash.com/photo-1582582494700-5c6b1c1b89a0?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN4?tag=yourtag-20"
+  },
+  {
+    "id": 5,
+    "name": "Glass Coffee Table",
+    "category": "coffee_table",
+    "room": "living_room",
+    "price": 249,
+    "image": "https://images.unsplash.com/photo-1567016548497-49c64d84fdb6?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN5?tag=yourtag-20"
+  },
+  {
+    "id": 6,
+    "name": "Round Minimal Coffee Table",
+    "category": "coffee_table",
+    "room": "living_room",
+    "price": 179,
+    "image": "https://images.unsplash.com/photo-1578898887932-dce23a595ad4?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN6?tag=yourtag-20"
+  },
+
+  {
+    "id": 7,
+    "name": "Modern TV Stand",
+    "category": "tv_stand",
+    "room": "living_room",
+    "price": 299,
+    "image": "https://images.unsplash.com/photo-1616627450425-6c6c8c1c6b9d?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN7?tag=yourtag-20"
+  },
+  {
+    "id": 8,
+    "name": "Floating TV Unit",
+    "category": "tv_stand",
+    "room": "living_room",
+    "price": 349,
+    "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN8?tag=yourtag-20"
+  },
+  {
+    "id": 9,
+    "name": "Wooden TV Console",
+    "category": "tv_stand",
+    "room": "living_room",
+    "price": 399,
+    "image": "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=800",
+    "link": "https://www.amazon.com/dp/ASIN9?tag=yourtag-20"
+  }
+]
