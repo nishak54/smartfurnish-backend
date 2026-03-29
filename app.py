@@ -27,9 +27,9 @@ SOFAS = [
             "right": "/assets/items/sofa/sofa1.webp",
         },
         "positions": {
-            "front": {"x": 110, "y": 275, "width": 300, "height": 150},
-            "left": {"x": 130, "y": 270, "width": 260, "height": 150},
-            "right": {"x": 500, "y": 270, "width": 260, "height": 150},
+            "front": {"x": 120, "y": 285, "width": 300, "height": 145},
+            "left": {"x": 150, "y": 290, "width": 250, "height": 138},
+            "right": {"x": 520, "y": 290, "width": 250, "height": 138},
         },
     },
     {
@@ -51,9 +51,9 @@ SOFAS = [
             "right": "/assets/items/sofa/sofa2.jpg",
         },
         "positions": {
-            "front": {"x": 95, "y": 265, "width": 330, "height": 165},
-            "left": {"x": 115, "y": 258, "width": 285, "height": 165},
-            "right": {"x": 475, "y": 258, "width": 285, "height": 165},
+            "front": {"x": 105, "y": 275, "width": 330, "height": 155},
+            "left": {"x": 140, "y": 280, "width": 275, "height": 145},
+            "right": {"x": 495, "y": 280, "width": 275, "height": 145},
         },
     },
     {
@@ -75,9 +75,9 @@ SOFAS = [
             "right": "/assets/items/sofa/sofa3.webp",
         },
         "positions": {
-            "front": {"x": 125, "y": 285, "width": 260, "height": 135},
-            "left": {"x": 145, "y": 280, "width": 235, "height": 135},
-            "right": {"x": 520, "y": 280, "width": 235, "height": 135},
+            "front": {"x": 135, "y": 295, "width": 255, "height": 128},
+            "left": {"x": 165, "y": 298, "width": 220, "height": 122},
+            "right": {"x": 545, "y": 298, "width": 220, "height": 122},
         },
     },
 ]
@@ -102,9 +102,9 @@ CENTER_TABLES = [
             "right": "/assets/items/tables/table1.webp",
         },
         "positions": {
-            "front": {"x": 425, "y": 315, "width": 150, "height": 95},
-            "left": {"x": 425, "y": 320, "width": 140, "height": 90},
-            "right": {"x": 355, "y": 320, "width": 140, "height": 90},
+            "front": {"x": 425, "y": 325, "width": 145, "height": 88},
+            "left": {"x": 430, "y": 328, "width": 130, "height": 82},
+            "right": {"x": 360, "y": 328, "width": 130, "height": 82},
         },
     },
     {
@@ -126,9 +126,9 @@ CENTER_TABLES = [
             "right": "/assets/items/tables/table2.jpg",
         },
         "positions": {
-            "front": {"x": 430, "y": 318, "width": 145, "height": 90},
-            "left": {"x": 430, "y": 320, "width": 135, "height": 86},
-            "right": {"x": 360, "y": 320, "width": 135, "height": 86},
+            "front": {"x": 430, "y": 326, "width": 142, "height": 84},
+            "left": {"x": 432, "y": 330, "width": 126, "height": 80},
+            "right": {"x": 362, "y": 330, "width": 126, "height": 80},
         },
     },
     {
@@ -150,9 +150,9 @@ CENTER_TABLES = [
             "right": "/assets/items/tables/table3.webp",
         },
         "positions": {
-            "front": {"x": 420, "y": 312, "width": 160, "height": 96},
-            "left": {"x": 420, "y": 318, "width": 145, "height": 90},
-            "right": {"x": 350, "y": 318, "width": 145, "height": 90},
+            "front": {"x": 420, "y": 322, "width": 158, "height": 92},
+            "left": {"x": 425, "y": 326, "width": 140, "height": 86},
+            "right": {"x": 355, "y": 326, "width": 140, "height": 86},
         },
     },
 ]
@@ -177,9 +177,9 @@ TV_STANDS = [
             "right": "/assets/items/tvstands/tvstand1.webp",
         },
         "positions": {
-            "front": {"x": 640, "y": 170, "width": 210, "height": 110},
-            "left": {"x": 700, "y": 182, "width": 150, "height": 92},
-            "right": {"x": 70, "y": 182, "width": 150, "height": 92},
+            "front": {"x": 640, "y": 190, "width": 195, "height": 92},
+            "left": {"x": 650, "y": 198, "width": 165, "height": 82},
+            "right": {"x": 105, "y": 198, "width": 165, "height": 82},
         },
     },
     {
@@ -201,9 +201,9 @@ TV_STANDS = [
             "right": "/assets/items/tvstands/tvstand2.jpg",
         },
         "positions": {
-            "front": {"x": 645, "y": 172, "width": 205, "height": 100},
-            "left": {"x": 705, "y": 185, "width": 145, "height": 88},
-            "right": {"x": 75, "y": 185, "width": 145, "height": 88},
+            "front": {"x": 645, "y": 192, "width": 192, "height": 86},
+            "left": {"x": 653, "y": 200, "width": 160, "height": 78},
+            "right": {"x": 108, "y": 200, "width": 160, "height": 78},
         },
     },
     {
@@ -225,9 +225,9 @@ TV_STANDS = [
             "right": "/assets/items/tvstands/tvstand3.jpg",
         },
         "positions": {
-            "front": {"x": 635, "y": 168, "width": 215, "height": 112},
-            "left": {"x": 700, "y": 180, "width": 150, "height": 94},
-            "right": {"x": 70, "y": 180, "width": 150, "height": 94},
+            "front": {"x": 635, "y": 188, "width": 202, "height": 96},
+            "left": {"x": 648, "y": 196, "width": 168, "height": 84},
+            "right": {"x": 102, "y": 196, "width": 168, "height": 84},
         },
     },
 ]
