@@ -244,45 +244,127 @@ ROOM = {
     "angles": ["front", "left", "right"]
 }
 
+REALVIEW_BACKGROUNDS = {
+    "front": "/assets/rooms/livingroom/front.jpg",
+    "left": "/assets/rooms/livingroom/left.jpg",
+    "right": "/assets/rooms/livingroom/right.jpg",
+}
+
+
 def pick_one(item_type, exclude_id=None):
     options = [item for item in CATALOG[item_type] if item["id"] != exclude_id]
     return copy.deepcopy(random.choice(options))
 
-def build_design(budget=None):
+
+def serialize_item_for_angle(item, angle):
+    angle_position = copy.deepcopy(item.get("positions", {}).get(angle, {}))
+
+    return {
+        "id": item.get("id"),
+        "type": item.get("type"),
+        "name": item.get("name"),
+        "price": item.get("price"),
+        "image": item.get("images", {}).get(angle) or item.get("images", {}).get("front"),
+        "position": angle_position,
+        "brand": item.get("brand"),
+        "color": item.get("color"),
+        "material": item.get("material"),
+        "in_stock": item.get("in_stock"),
+    }
+
+
+def build_realview(design):
+    items = design.get("items", [])
+    views = {}
+
+    for angle in ROOM["angles"]:
+        view_items = []
+        for item in items:
+            serialized = serialize_item_for_angle(item, angle)
+            if serialized["position"]:
+                view_items.append(serialized)
+
+        views[angle] = {
+            "angle": angle,
+            "background": REALVIEW_BACKGROUNDS.get(angle),
+            "room": {
+                "width": ROOM["width"],
+                "height": ROOM["height"],
+            },
+            "items": view_items,
+        }
+
+    return {
+        "defaultAngle": "front",
+        "angles": ROOM["angles"],
+        "views": views,
+    }
+
+
+def build_design(budget=None, include_realview=True):
     items = [
         pick_one("sofa"),
         pick_one("center_table"),
         pick_one("tv_stand"),
     ]
     total = sum(item["price"] for item in items)
-    return {
+
+    design = {
         "room": ROOM,
         "items": items,
         "total": total,
         "within_budget": total <= budget if budget is not None else True
     }
 
-def refresh_totals(design, budget=None):
+    if include_realview:
+        design["realview"] = build_realview(design)
+
+    return design
+
+
+def refresh_totals(design, budget=None, include_realview=True):
     total = sum(item["price"] for item in design["items"])
     design["total"] = total
     design["within_budget"] = total <= budget if budget is not None else True
+
+    if include_realview:
+        design["realview"] = build_realview(design)
+
     return design
 
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "SmartFurnish Backend Running"})
 
+
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.get_json() or {}
     budget = data.get("budget")
-    return jsonify(build_design(budget))
+    include_realview = data.get("includeRealview", True)
+    return jsonify(build_design(budget, include_realview=include_realview))
+
+
+@app.route("/generate-realview", methods=["POST"])
+def generate_realview():
+    data = request.get_json() or {}
+    design = copy.deepcopy(data.get("design"))
+
+    if not design or "items" not in design:
+        return jsonify({"error": "Invalid request"}), 400
+
+    return jsonify({
+        "realview": build_realview(design)
+    })
+
 
 @app.route("/regenerate", methods=["POST"])
 def regenerate():
     data = request.get_json() or {}
     budget = data.get("budget")
-    return jsonify(build_design(budget))
+    include_realview = data.get("includeRealview", True)
+    return jsonify(build_design(budget, include_realview=include_realview))
+
 
 @app.route("/regenerate-item", methods=["POST"])
 def regenerate_item():
@@ -290,6 +372,7 @@ def regenerate_item():
     item_type = data.get("itemType")
     design = copy.deepcopy(data.get("design"))
     budget = data.get("budget")
+    include_realview = data.get("includeRealview", True)
 
     if not design or item_type not in CATALOG:
         return jsonify({"error": "Invalid request"}), 400
@@ -299,7 +382,8 @@ def regenerate_item():
             design["items"][i] = pick_one(item_type, exclude_id=item["id"])
             break
 
-    return jsonify(refresh_totals(design, budget))
+    return jsonify(refresh_totals(design, budget, include_realview=include_realview))
+
 
 @app.route("/remove-item", methods=["POST"])
 def remove_item():
@@ -307,24 +391,29 @@ def remove_item():
     item_type = data.get("itemType")
     design = copy.deepcopy(data.get("design"))
     budget = data.get("budget")
+    include_realview = data.get("includeRealview", True)
 
     if not design:
         return jsonify({"error": "Invalid request"}), 400
 
     design["items"] = [item for item in design["items"] if item["type"] != item_type]
-    return jsonify(refresh_totals(design, budget))
+    return jsonify(refresh_totals(design, budget, include_realview=include_realview))
+
 
 @app.route("/update-layout", methods=["POST"])
 def update_layout():
     data = request.get_json() or {}
-    design = data.get("design")
+    design = copy.deepcopy(data.get("design"))
     budget = data.get("budget")
+    include_realview = data.get("includeRealview", True)
 
     if not design:
         return jsonify({"error": "Invalid request"}), 400
 
-    return jsonify(refresh_totals(design, budget))
+    return jsonify(refresh_totals(design, budget, include_realview=include_realview))
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+    
