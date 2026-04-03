@@ -3,6 +3,7 @@ from flask_cors import CORS
 import random
 import os
 import copy
+from urllib.parse import urljoin
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -250,6 +251,8 @@ REALVIEW_BACKGROUNDS = {
     "right": "/assets/rooms/livingroom/right.jpg",
 }
 
+FALLBACK_REAL_IMAGE = "/assets/generated/front-natural-room.png"
+
 
 def pick_one(item_type, exclude_id=None):
     options = [item for item in CATALOG[item_type] if item["id"] != exclude_id]
@@ -257,19 +260,21 @@ def pick_one(item_type, exclude_id=None):
 
 
 def serialize_item_for_angle(item, angle):
-    angle_position = copy.deepcopy(item.get("positions", {}).get(angle, {}))
-
     return {
         "id": item.get("id"),
         "type": item.get("type"),
         "name": item.get("name"),
         "price": item.get("price"),
         "image": item.get("images", {}).get(angle) or item.get("images", {}).get("front"),
-        "position": angle_position,
+        "position": copy.deepcopy(item.get("positions", {}).get(angle, {})),
         "brand": item.get("brand"),
         "color": item.get("color"),
         "material": item.get("material"),
         "in_stock": item.get("in_stock"),
+        "dimensions": item.get("dimensions"),
+        "rating": item.get("rating"),
+        "reviews": item.get("reviews"),
+        "purchases": item.get("purchases"),
     }
 
 
@@ -278,26 +283,27 @@ def build_realview(design):
     views = {}
 
     for angle in ROOM["angles"]:
-        view_items = []
+        angle_items = []
+
         for item in items:
-            serialized = serialize_item_for_angle(item, angle)
-            if serialized["position"]:
-                view_items.append(serialized)
+            position = item.get("positions", {}).get(angle)
+            if position:
+                angle_items.append(serialize_item_for_angle(item, angle))
 
         views[angle] = {
             "angle": angle,
             "background": REALVIEW_BACKGROUNDS.get(angle),
             "room": {
                 "width": ROOM["width"],
-                "height": ROOM["height"],
+                "height": ROOM["height"]
             },
-            "items": view_items,
+            "items": angle_items
         }
 
     return {
         "defaultAngle": "front",
         "angles": ROOM["angles"],
-        "views": views,
+        "views": views
     }
 
 
@@ -332,6 +338,69 @@ def refresh_totals(design, budget=None, include_realview=True):
 
     return design
 
+
+def get_public_base_url():
+    return os.environ.get("PUBLIC_BASE_URL", "https://smartfurnish-backend.onrender.com").rstrip("/")
+
+
+def absolute_public_url(path):
+    if not path:
+        return ""
+    if path.startswith("http://") or path.startswith("https://"):
+        return path
+    return f"{get_public_base_url()}{path}"
+
+
+def build_real_image_prompt(payload):
+    scene = payload.get("scene", {})
+    sofa = scene.get("sofa", {})
+    table = scene.get("table", {})
+    room_type = payload.get("roomType", "living_room")
+    view = payload.get("view", "front")
+
+    sofa_name = sofa.get("name", "curved sofa")
+    sofa_material = sofa.get("material", "soft fabric")
+    sofa_color = sofa.get("color", "off-white")
+    sofa_style = sofa.get("style", "modern")
+
+    table_name = table.get("name", "round coffee table")
+    table_material = table.get("material", "wood")
+    table_color = table.get("color", "beige")
+    table_style = table.get("style", "minimal")
+
+    prompt = f"""
+Photorealistic {view} view of a {room_type.replace('_', ' ')}.
+A natural elegant living room with a {sofa_color.lower()} {sofa_style.lower()} {sofa_name.lower()} made of {sofa_material.lower()} as the main focal point.
+In front of it, a {table_color.lower()} {table_style.lower()} {table_name.lower()} made of {table_material.lower()}.
+The furniture should feel naturally placed in a real room, with correct scale, realistic shadows, soft daylight, light wood flooring, a subtle neutral rug, clean off-white wall, tasteful minimal decor, premium apartment interior styling, warm ambient light, and camera composition from the front view.
+Do not show floating furniture. Make the room look like a genuine interior photograph.
+""".strip()
+
+    return " ".join(prompt.split())
+
+def generate_real_image(payload):
+    """
+    Phase 1 implementation:
+    - Build a strong prompt from the finalized 3D scene
+    - Return a fallback realistic image so the feature works end-to-end now
+
+    Phase 2:
+    - Replace this with a call to your image generation provider
+    - Return the provider image URL or a saved generated asset URL
+    """
+    prompt = build_real_image_prompt(payload)
+
+    # Replace this later with real model output.
+    # For now, make sure this image exists in your frontend/public or backend-served static assets path.
+    image_url = absolute_public_url(FALLBACK_REAL_IMAGE)
+
+    return {
+        "imageUrl": image_url,
+        "promptUsed": prompt,
+        "generationMode": "fallback_image"
+    }
+
+
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({"message": "SmartFurnish Backend Running"})
@@ -356,6 +425,25 @@ def generate_realview():
     return jsonify({
         "realview": build_realview(design)
     })
+
+
+@app.route("/generate-real-image", methods=["POST"])
+def generate_real_image_route():
+    payload = request.get_json(silent=True) or {}
+
+    if "scene" not in payload:
+        return jsonify({"error": "Missing scene in request payload"}), 400
+
+    try:
+        result = generate_real_image(payload)
+        return jsonify({
+            "success": True,
+            "imageUrl": result["imageUrl"],
+            "promptUsed": result["promptUsed"],
+            "generationMode": result["generationMode"],
+        })
+    except Exception as exc:
+        return jsonify({"error": f"Failed to generate real image: {str(exc)}"}), 500
 
 
 @app.route("/regenerate", methods=["POST"])
@@ -416,4 +504,3 @@ def update_layout():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-    
