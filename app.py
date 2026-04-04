@@ -251,7 +251,7 @@ REALVIEW_BACKGROUNDS = {
     "right": "/assets/rooms/livingroom/right.jpg",
 }
 
-FALLBACK_REAL_IMAGE = "/assets/generated/front-natural-room.png"
+FALLBACK_REAL_IMAGE = "/static/assets/generated/front-natural-room.jpg"
 
 
 def pick_one(item_type, exclude_id=None):
